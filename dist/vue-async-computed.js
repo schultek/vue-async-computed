@@ -279,15 +279,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var getter = fn.get;
 
     return function () {
+      var _this2 = this;
+
       var stored = initialGet ? JSON.parse(root.localStorage.getItem(prefix + key)) : null;
       initialGet = false;
-      if (stored && fn.maxage !== undefined && typeof fn.maxage === "number") {
-        if (stored.timestamp + fn.maxage * 1000 < Date.now()) {
-          stored = null;
-          root.localStorage.removeItem(prefix + key);
-        }
-      }
       if (stored) {
+        if (fn.maxage !== undefined && typeof fn.maxage === "number" && stored.timestamp + fn.maxage * 1000 < Date.now()) {
+          process.nextTick(function () {
+            _this2.$asyncComputed[key].update();
+          });
+        }
         return stored.data;
       } else {
         return getter.call(this).then(function (result) {
