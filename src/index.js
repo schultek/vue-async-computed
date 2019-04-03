@@ -141,7 +141,25 @@ function getterOnly (fn) {
 function getterFn (key, fn) {
   if (typeof fn === 'function') return fn
 
-  let getter = fn.get
+  let getter;
+
+  if (fn.persistent) {
+    let initialGet = true;
+    getter = function() {
+      if (initialGet && localStorage.getItem(prefic+key)) {
+        initialGet = false;
+        return JSON.parse(localStorage.getItem(prefix+key))
+      } else {
+        initialGet = false;
+        return fn.get.call(this).then(result => {
+          localStorage.setItem(prefix+ley, JSON.stringify(d));
+          return result;
+        })
+      }
+    }
+  } else {
+    getter = fn.get;
+  }
 
   if (fn.hasOwnProperty('watch')) {
     getter = getWatchedGetter(fn)
