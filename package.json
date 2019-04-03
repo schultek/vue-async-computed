@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "lint": "eslint src test",
+    "lint": "eslint src test --fix",
     "check": "npm run lint -s && dependency-check package.json --no-default-entries src/index.js",
     "watch": "watch 'npm run build' src test",
     "test": "babel-node --presets env test/index.js | tspec",
@@ -76,5 +76,8 @@
     "tape": "^4.9.2",
     "vue": "^2.5.21",
     "watch": "^1.0.2"
+  },
+  "dependencies": {
+    "window-or-global": "^1.0.1"
   }
 }

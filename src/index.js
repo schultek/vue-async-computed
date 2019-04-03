@@ -9,6 +9,8 @@ import {
 import { getWatchedGetter } from './watch'
 import { getGetterWithShouldUpdate, shouldNotUpdate } from './shouldUpdate'
 
+import root from 'window-or-global'
+
 const prefix = '_async_computed$'
 
 const AsyncComputed = {
@@ -141,24 +143,24 @@ function getterOnly (fn) {
 function getterFn (key, fn) {
   if (typeof fn === 'function') return fn
 
-  let getter;
+  let getter
 
   if (fn.persistent) {
-    let initialGet = true;
-    getter = function() {
-      if (initialGet && localStorage.getItem(prefic+key)) {
-        initialGet = false;
-        return JSON.parse(localStorage.getItem(prefix+key))
+    let initialGet = true
+    getter = function () {
+      if (initialGet && root.localStorage.getItem(prefix + key)) {
+        initialGet = false
+        return JSON.parse(root.localStorage.getItem(prefix + key))
       } else {
-        initialGet = false;
+        initialGet = false
         return fn.get.call(this).then(result => {
-          localStorage.setItem(prefix+ley, JSON.stringify(d));
-          return result;
+          root.localStorage.setItem(prefix + key, JSON.stringify(result))
+          return result
         })
       }
     }
   } else {
-    getter = fn.get;
+    getter = fn.get
   }
 
   if (fn.hasOwnProperty('watch')) {
