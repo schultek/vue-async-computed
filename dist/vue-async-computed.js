@@ -130,6 +130,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           if (!Object.keys(asyncComputed).length) return;
 
           for (var key in asyncComputed) {
+            if (_typeof(asyncComputed[key]) === "object" && asyncComputed[key].persistent) {
+              asyncComputed[key].get = persistentFn(key, asyncComputed[key]);
+            }
+
             var getter = getterFn(key, asyncComputed[key]);
             this.$options.computed[prefix + key] = getter;
           }
@@ -231,34 +235,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   function getterFn(key, fn) {
     if (typeof fn === 'function') return fn;
 
-    var getter = void 0;
-
-    if (fn.persistent) {
-      var initialGet = true;
-      getter = function getter() {
-        var stored = initialGet ? JSON.parse(root.localStorage.getItem(prefix + key)) : null;
-        initialGet = false;
-        if (stored && fn.maxage !== undefined && typeof fn.maxage === "number") {
-          if (stored.timestamp + fn.maxage * 1000 < Date.now()) {
-            stored = null;
-            root.localStorage.removeItem(prefix + key);
-          }
-        }
-        if (stored) {
-          return stored.data;
-        } else {
-          return fn.get.call(this).then(function (result) {
-            root.localStorage.setItem(prefix + key, JSON.stringify({
-              timestamp: Date.now(),
-              data: result
-            }));
-            return result;
-          });
-        }
-      };
-    } else {
-      getter = fn.get;
-    }
+    var getter = fn.get;
 
     if (fn.hasOwnProperty('watch')) {
       getter = getWatchedGetter(fn);
@@ -295,6 +272,33 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     } else {
       return defaultValue;
     }
+  }
+
+  function persistentFn(key, fn) {
+    var initialGet = true;
+    var getter = fn.get;
+
+    return function () {
+      var stored = initialGet ? JSON.parse(root.localStorage.getItem(prefix + key)) : null;
+      initialGet = false;
+      if (stored && fn.maxage !== undefined && typeof fn.maxage === "number") {
+        if (stored.timestamp + fn.maxage * 1000 < Date.now()) {
+          stored = null;
+          root.localStorage.removeItem(prefix + key);
+        }
+      }
+      if (stored) {
+        return stored.data;
+      } else {
+        return getter.call(this).then(function (result) {
+          root.localStorage.setItem(prefix + key, JSON.stringify({
+            timestamp: Date.now(),
+            data: result
+          }));
+          return result;
+        });
+      }
+    };
   }
 
   /* istanbul ignore if */

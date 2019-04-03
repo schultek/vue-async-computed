@@ -38,6 +38,10 @@ const AsyncComputed = {
         if (!Object.keys(asyncComputed).length) return
 
         for (const key in asyncComputed) {
+          if (typeof asyncComputed[key] === "object" && asyncComputed[key].persistent) {
+            asyncComputed[key].get = persistentFn(key, asyncComputed[key])
+          }
+
           const getter = getterFn(key, asyncComputed[key])
           this.$options.computed[prefix + key] = getter
         }
@@ -143,34 +147,7 @@ function getterOnly (fn) {
 function getterFn (key, fn) {
   if (typeof fn === 'function') return fn
 
-  let getter
-
-  if (fn.persistent) {
-    let initialGet = true
-    getter = function () {
-      let stored = initialGet ? JSON.parse(root.localStorage.getItem(prefix + key)) : null
-      initialGet = false
-      if (stored && fn.maxage !== undefined && typeof fn.maxage === "number") {
-        if (stored.timestamp + fn.maxage * 1000 < Date.now()) {
-          stored = null
-          root.localStorage.removeItem(prefix + key)
-        }
-      }
-      if (stored) {
-        return stored.data
-      } else {
-        return fn.get.call(this).then(result => {
-          root.localStorage.setItem(prefix + key, JSON.stringify({
-            timestamp: Date.now(),
-            data: result
-          }))
-          return result
-        })
-      }
-    }
-  } else {
-    getter = fn.get
-  }
+  let getter = fn.get
 
   if (fn.hasOwnProperty('watch')) {
     getter = getWatchedGetter(fn)
@@ -206,6 +183,33 @@ function generateDefault (fn, pluginOptions) {
     return defaultValue.call(this)
   } else {
     return defaultValue
+  }
+}
+
+function persistentFn (key, fn) {
+  let initialGet = true
+  let getter = fn.get
+
+  return function () {
+    let stored = initialGet ? JSON.parse(root.localStorage.getItem(prefix + key)) : null
+    initialGet = false
+    if (stored && fn.maxage !== undefined && typeof fn.maxage === "number") {
+      if (stored.timestamp + fn.maxage * 1000 < Date.now()) {
+        stored = null
+        root.localStorage.removeItem(prefix + key)
+      }
+    }
+    if (stored) {
+      return stored.data
+    } else {
+      return getter.call(this).then(result => {
+        root.localStorage.setItem(prefix + key, JSON.stringify({
+          timestamp: Date.now(),
+          data: result
+        }))
+        return result
+      })
+    }
   }
 }
 
