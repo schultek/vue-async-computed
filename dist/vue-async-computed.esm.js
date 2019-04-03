@@ -229,13 +229,22 @@ function getterFn(key, fn) {
   if (fn.persistent) {
     var initialGet = true;
     getter = function getter() {
-      if (initialGet && root.localStorage.getItem(prefix + key)) {
-        initialGet = false;
-        return JSON.parse(root.localStorage.getItem(prefix + key));
+      var stored = initialGet ? JSON.parse(root.localStorage.getItem(prefix + key)) : null;
+      initialGet = false;
+      if (stored && fn.maxage !== undefined && typeof fn.maxage === "number") {
+        if (stored.timestamp + fn.maxage * 1000 < Date.now()) {
+          stored = null;
+          root.localStorage.removeItem(prefix + key);
+        }
+      }
+      if (stored) {
+        return stored.data;
       } else {
-        initialGet = false;
         return fn.get.call(this).then(function (result) {
-          root.localStorage.setItem(prefix + key, JSON.stringify(result));
+          root.localStorage.setItem(prefix + key, JSON.stringify({
+            timestamp: Date.now(),
+            data: result
+          }));
           return result;
         });
       }

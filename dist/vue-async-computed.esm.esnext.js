@@ -230,13 +230,22 @@ function getterFn (key, fn) {
   if (fn.persistent) {
     let initialGet = true;
     getter = function () {
-      if (initialGet && root.localStorage.getItem(prefix + key)) {
-        initialGet = false;
-        return JSON.parse(root.localStorage.getItem(prefix + key))
+      let stored = initialGet ? JSON.parse(root.localStorage.getItem(prefix + key)) : null;
+      initialGet = false;
+      if (stored && fn.maxage !== undefined && typeof fn.maxage === "number") {
+        if (stored.timestamp + fn.maxage * 1000 < Date.now()) {
+          stored = null;
+          root.localStorage.removeItem(prefix + key);
+        }
+      }
+      if (stored) {
+        return stored.data
       } else {
-        initialGet = false;
         return fn.get.call(this).then(result => {
-          root.localStorage.setItem(prefix + key, JSON.stringify(result));
+          root.localStorage.setItem(prefix + key, JSON.stringify({
+            timestamp: Date.now(),
+            data: result
+          }));
           return result
         })
       }
