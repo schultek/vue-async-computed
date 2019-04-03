@@ -1,5 +1,5 @@
 {
-  "name": "vue-async-computed",
+  "name": "vue-persistent-async-computed",
   "version": "3.6.1",
   "description": "Async computed properties for Vue",
   "main": "dist/vue-async-computed.js",
@@ -35,7 +35,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/foxbenjaminfox/vue-async-computed.git"
+    "url": "git+https://github.com/schultek/vue-async-computed.git"
   },
   "keywords": [
     "vue",
@@ -47,9 +47,9 @@
   "author": "Benjamin Fox <foxbenjaminfox@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/foxbenjaminfox/vue-async-computed/issues"
+    "url": "https://github.com/schultek/vue-async-computed/issues"
   },
-  "homepage": "https://github.com/foxbenjaminfox/vue-async-computed#readme",
+  "homepage": "https://github.com/schultek/vue-async-computed#readme",
   "peerDependencies": {
     "vue": "~2"
   },
