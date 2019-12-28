@@ -287,10 +287,12 @@ function persistentFn(key, fn) {
       return stored.data;
     } else {
       return getter.call(this).then(function (result) {
-        root.localStorage.setItem(prefix + key, JSON.stringify({
-          timestamp: Date.now(),
-          data: result
-        }));
+        if (result !== undefined) {
+          root.localStorage.setItem(prefix + key, JSON.stringify({
+            timestamp: Date.now(),
+            data: result
+          }));
+        }
         return result;
       });
     }

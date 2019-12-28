@@ -291,10 +291,12 @@
         return stored.data
       } else {
         return getter.call(this).then(result => {
-          root.localStorage.setItem(prefix + key, JSON.stringify({
-            timestamp: Date.now(),
-            data: result
-          }));
+          if (result !== undefined) {
+            root.localStorage.setItem(prefix + key, JSON.stringify({
+              timestamp: Date.now(),
+              data: result
+            }));
+          }
           return result
         })
       }
